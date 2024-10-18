@@ -249,6 +249,8 @@ typedef struct MPContext {
     // mp_dispatch_lock must be called to change it.
     int64_t outstanding_async;
 
+    mp_backup_log_cb backup_log; 
+
     struct mp_thread_pool *thread_pool; // for coarse I/O, often during loading
 
     struct mp_log *statusline;

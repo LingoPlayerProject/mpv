@@ -247,6 +247,9 @@ static bool check_locale(void)
     return !name || strcmp(name, "C") == 0 || strcmp(name, "C.UTF-8") == 0;
 }
 
+static void noop_backup_log(const char* format, ...) {
+}
+
 struct MPContext *mp_create(void)
 {
     if (!check_locale()) {
@@ -277,6 +280,7 @@ struct MPContext *mp_create(void)
         .thread_pool = mp_thread_pool_create(mpctx, 0, 1, 30),
         .stop_play = PT_NEXT_ENTRY,
         .play_dir = 1,
+        .backup_log = noop_backup_log,
     };
 
     mp_mutex_init(&mpctx->abort_lock);
@@ -288,6 +292,7 @@ struct MPContext *mp_create(void)
     // Nothing must call mp_msg*() and related before this
     mp_msg_init(mpctx->global);
     mpctx->log = mp_log_new(mpctx, mpctx->global->log, "!cplayer");
+    mpctx->global->backup_log = noop_backup_log;
     mpctx->statusline = mp_log_new(mpctx, mpctx->log, "!statusline");
 
     mpctx->stats = stats_ctx_create(mpctx, mpctx->global, "main");

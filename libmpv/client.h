@@ -1768,6 +1768,14 @@ MPV_EXPORT void mpv_wakeup(mpv_handle *ctx);
  */
 MPV_EXPORT void mpv_set_wakeup_callback(mpv_handle *ctx, void (*cb)(void *d), void *d);
 
+typedef void (*mp_backup_log_cb)(const char* format, ...);
+
+/**
+ * The Log depends on event machenism, and sometimes is not available (such as in destory process),
+ * then set a simple backup_log callback is an option
+ */
+MPV_EXPORT void mpv_set_backup_log_cb(mpv_handle *ctx, mp_backup_log_cb cb);
+
 /**
  * Block until all asynchronous requests are done. This affects functions like
  * mpv_command_async(), which return immediately and return their result as

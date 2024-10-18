@@ -379,6 +379,14 @@ void mpv_set_wakeup_callback(mpv_handle *ctx, void (*cb)(void *d), void *d)
     mp_mutex_unlock(&ctx->wakeup_lock);
 }
 
+void mpv_set_backup_log_cb(mpv_handle *ctx, mp_backup_log_cb cb)
+{
+    mp_mutex_lock(&ctx->lock);
+    ctx->mpctx->backup_log = cb;
+    ctx->mpctx->global->backup_log = cb;
+    mp_mutex_unlock(&ctx->lock);
+}
+
 static void lock_core(mpv_handle *ctx)
 {
     mp_dispatch_lock(ctx->mpctx->dispatch);
@@ -520,10 +528,10 @@ static void mp_destroy_client(mpv_handle *ctx, bool terminate)
         clients->terminate_core_thread = true;
         mp_mutex_unlock(&clients->lock);
         mp_wakeup_core(mpctx);
-
+        
         // Blocking wait for all clients and core thread to terminate.
         mp_thread_join(mpctx->core_thread);
-
+        
         mp_destroy(mpctx);
     }
 }
@@ -567,10 +575,10 @@ void mp_shutdown_clients(struct MPContext *mpctx)
             // timeout.
             abort_async(mpctx, NULL, 0, 0);
         }
-
+        
         mp_client_broadcast_event(mpctx, MPV_EVENT_SHUTDOWN, NULL);
         mp_wait_events(mpctx);
-
+        
         mp_mutex_lock(&clients->lock);
     }
 
@@ -589,20 +597,20 @@ bool mp_is_shutting_down(struct MPContext *mpctx)
 static MP_THREAD_VOID core_thread(void *p)
 {
     struct MPContext *mpctx = p;
-
+    
     mp_thread_set_name("core");
-
+    
     while (!mpctx->initialized && mpctx->stop_play != PT_QUIT)
         mp_idle(mpctx);
-
+    
     if (mpctx->initialized)
         mp_play_files(mpctx);
-
+    
     // This actually waits until all clients are gone before actually
     // destroying mpctx. Actual destruction is done by whatever destroys
     // the last mpv_handle.
     mp_shutdown_clients(mpctx);
-
+    
     MP_THREAD_RETURN();
 }
 
